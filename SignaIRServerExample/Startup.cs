@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using SignaIRServerExample.Business;
 using SignaIRServerExample.Hubs;
 
 namespace SignaIRServerExample
@@ -22,8 +23,14 @@ namespace SignaIRServerExample
                     .AllowCredentials()
                     .SetIsOriginAllowed(origin => true)
             ));
+
+            //IHubContext kullanabilmek için
+            services.AddTransient<MyBusiness>();
             //signaIR kullanmak için 
             services.AddSignalR();
+
+            //Boþ bir asp.core kurduðum için Controllers ü belirtilmesi gerekir
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -43,6 +50,7 @@ namespace SignaIRServerExample
                 //Endpoints'i deðiþ
                 //https://localhost:5001/myhub
                 endpoints.MapHub<MyHub>("/myhub");//bundan sonra myhub'a bir istek geliyorsa MyHub tarafýndan karþýlanacaktýr
+                endpoints.MapControllers();//Controller da yapýlan iþlemleri eþleþtirmesi için
             });
         }
     }
