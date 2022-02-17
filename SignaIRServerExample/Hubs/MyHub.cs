@@ -10,6 +10,8 @@ namespace SignaIRServerExample.Hubs
     {
         public async Task SendMessageAsync(string message)
         {//Client ları haberleştirmek için kullanılır gibi düşün
+
+            //ekstra işlemler.....
            await Clients.All.SendAsync("receiveMessage",message);//subscrip olan herkese gönder. "receiveMessage" client larda olan fonksiyon adı
         }
     }

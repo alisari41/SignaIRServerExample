@@ -15,6 +15,13 @@ namespace SignaIRServerExample
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            // cors policy lerine izin verdim
+            services.AddCors(options => options.AddDefaultPolicy(policy =>
+                policy.AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials()
+                    .SetIsOriginAllowed(origin => true)
+            ));
             //signaIR kullanmak için 
             services.AddSignalR();
         }
@@ -26,11 +33,15 @@ namespace SignaIRServerExample
                 app.UseDeveloperExceptionPage();
             }
 
+            //UserRoutingde önce çaðýrýlmasý gerekir.
+            app.UseCors();
+
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
             {
                 //Endpoints'i deðiþ
+                //https://localhost:5001/myhub
                 endpoints.MapHub<MyHub>("/myhub");//bundan sonra myhub'a bir istek geliyorsa MyHub tarafýndan karþýlanacaktýr
             });
         }
