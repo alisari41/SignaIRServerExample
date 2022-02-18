@@ -45,6 +45,7 @@ namespace SignalRServerExample
                 //Endpoints'i deðiþ
                 //https://localhost:5001/myhub
                 endpoints.MapHub<MyHub>("/myhub");//bundan sonra myhub'a bir istek geliyorsa MyHub tarafýndan karþýlanacaktýr
+                endpoints.MapHub<MessageHub>("/messagehub");
                 endpoints.MapControllers();//Controller da yapýlan iþlemleri eþleþtirmesi için
             });
         }
