@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="signalr.min.js"></script>
+    <script src="jquery.min.js"></script>
+
+    <script>
+        $(document).ready(() => {
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:5001/messagehub")// myhub classımım adı
+                //Bağlantı var lakin koptuğu durumlarda kullanılır
+                .withAutomaticReconnect([1000, 1000, 2000])//hangi aralıklarla deneyeceğini milisaniye olarak belirttim
+                .build();
+
+            //bağlantı hiç kurulmadığı durumlarda bu fonksiyon kullanılır
+            async function start() {
+                try {
+                    await connection.start();
+                }
+                catch (error) {
+                    setTimeout(() => start(), 2000);//2 saniyede bir tekrar başlatmaya çalış                
+                }
+            }
+
+            //connection.start(); artık gerek yok benim fonksiyonum üzeriden devam etsin
+
+            start();
+            function animation() {
+                durum.fadeIn(2000, () => {
+                    setTimeout(() => {
+                        durum.fadeOut();
+                    }, 2000);
+                });
+            }
+
+
+            //         Durum Fonksiyonları
+            // 1.	OnReconnecting = Yeniden bağlanma girişimlerini başlatmadan önce fırlatılan/tetiklenen eventtir.
+            // 2.	OnReconnected = Yeniden bağlantı gerçekleştiğinde tetiklenen fonksiyondur.
+            // 3.	OnClose = Yeniden bağlantı girişimlerinin sonuçsuz kaldığı durumlarda fırlatılır.
+
+            const durum = $("#durum");
+            connection.onreconnecting(error => {
+                durum.css("background-color", "blue");
+                durum.css("color", "white");
+                durum.html("Bağlantı Kuruluyor...");
+                // Her yerde kullandığım için fonksiyon haline getirdim
+                animation();
+            });
+
+            connection.onreconnected(connectionId => {
+                durum.css("background-color", "green");
+                durum.css("color", "white");
+                durum.html("Bağlantı Kuruldu...");
+                // Her yerde kullandığım için fonksiyon haline getirdim
+                animation();
+
+            });
+
+            connection.onclose(connectionId => {
+                durum.css("background-color", "red");
+                durum.css("color", "white");
+                durum.html("Bağlantı Kurulamadı...");
+                // Her yerde kullandığım için fonksiyon haline getirdim
+                animation();
+            });
+            // "Durum Fonksiyonları" Buraya kadar 
+
+
+
+
+
+            $("#btnGonder").click(() => {
+                let message = $("#txtMessage").val();
+                let connectionIds = $("#connectionIds").val().split(",");
+                let groups = $("#txtGroups").val().split(",");// , ile ayırarak değerleri al
+                // connection.invoke("SendMessageAsync", message, connectionIds).catch(error => console.log(`Mesaj gönderilirken hata oluştu. ${error}`));
+                // connection.invoke("SendMessageAsync", message, $("input[name=grup]:checked").val(),connectionIds).catch(error => console.log(`Mesaj gönderilirken hata oluştu. ${error}`));
+                connection.invoke("SendMessageAsync", message, groups[0]).catch(error => console.log(`Mesaj gönderilirken hata oluştu. ${error}`));
+            });
+
+            connection.on("receiveMessage", message => {
+                $("#mesajlar").append(message + "<br>");
+            });
+
+
+            //Bağlanan Client'in connectionId sini göstercem
+            let _connectionId = "";
+            connection.on("getConnectionId", connectionId => {
+                _connectionId = connectionId;
+                $("#connectionId").html(`ConnectionId : ${connectionId}`);
+            });
+
+            $("#btnGrubaGir").click(() => {
+                let groupName = $("input[name=grup]:checked").val();
+                connection.invoke("addGroup", _connectionId, groupName).catch(error => console.log(`Gruba eklenirken hata oluştu. ${error}`));
+            });
+
+        });
+    </script>
+</head>
+
+<body>
+    <!-- ctrl+k ctrl+d = Shift + Alt + F      -->
+
+    <div style="background-color: black;color:white;" id="connectionId"></div>
+    <input type="radio" name="grup" value="A"> A
+    <input type="radio" name="grup" value="B"> B
+    <input type="radio" name="grup" value="C"> C
+    <button id="btnGrubaGir">Gruba Gir</button>
+    <br>
+    <div id="durum" style="display: none;"></div>
+    <input type="text" id="txtMessage" placeholder="Mesaj"><br>
+    <input type="text" id="txtGroups" placeholder="Groups">
+    <br>
+    <br><br>
+    <textarea id="connectionIds" cols="30" rows="10" placeholder="Connection Id"></textarea>
+    <button id="btnGonder">Gönder</button>
+
+    <div id="mesajlar"></div>
+
+
+</body>
+
+</html>
